@@ -1,26 +1,120 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─── Design tokens ────────────────────────────────────────────────────────
+   @theme (no inline) creates CSS custom properties at :root AND generates
+   Tailwind utility classes (bg-surface, text-dim, border-line, etc.).
+   This means both  className="bg-surface"  and  var(--color-surface)  work.
+   ──────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Surfaces */
+  --color-base:       #060d1b;
+  --color-surface:    #0d1726;
+  --color-surface-2:  #131f32;
+  --color-surface-3:  #1a2a40;
+
+  /* Borders */
+  --color-line:       rgba(255,255,255,0.07);
+  --color-line-hi:    rgba(255,255,255,0.13);
+
+  /* Text */
+  --color-content:    #dde6f0;
+  --color-dim:        #8aa0bc;
+  --color-muted:      #3d5470;
+
+  /* Green */
+  --color-green:         #00e87a;
+  --color-green-subtle:  rgba(0,232,122,0.10);
+  --color-green-ring:    rgba(0,232,122,0.20);
+
+  /* Blue */
+  --color-blue:          #4db8ff;
+  --color-blue-subtle:   rgba(77,184,255,0.10);
+  --color-blue-ring:     rgba(77,184,255,0.20);
+
+  /* Orange */
+  --color-orange:        #ffb83f;
+  --color-orange-subtle: rgba(255,184,63,0.10);
+  --color-orange-ring:   rgba(255,184,63,0.20);
+
+  /* Red */
+  --color-red:           #ff5c72;
+  --color-red-subtle:    rgba(255,92,114,0.10);
+  --color-red-ring:      rgba(255,92,114,0.20);
+
+  /* Purple */
+  --color-purple:        #b48aff;
+  --color-purple-subtle: rgba(180,138,255,0.10);
+  --color-purple-ring:   rgba(180,138,255,0.20);
+
+  /* Fonts */
+  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Reset ──────────────────────────────────────────────────────────────── */
+/* Must live in @layer base so @layer utilities (Tailwind classes) wins. */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-base);
+  color: var(--color-content);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  min-height: 100%;
 }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
+
+/* ─── Table grid ─────────────────────────────────────────────────────────
+   grid-template-columns with mixed units can't be expressed as a Tailwind
+   inline class, so we keep it here.
+   ──────────────────────────────────────────────────────────────────────── */
+.table-grid {
+  display: grid;
+  grid-template-columns: 44px 110px 52px 150px 1fr 130px 220px 90px;
+}
+
+@media (max-width: 900px) {
+  .table-grid { grid-template-columns: 44px 100px 50px 130px 1fr 100px; }
+  .col-endpoint, .col-actions { display: none; }
+}
+
+/* ─── H / A pseudo-labels ────────────────────────────────────────────────
+   content: can only be set in CSS, not inline.
+   ──────────────────────────────────────────────────────────────────────── */
+.team-home::before {
+  content: 'H';
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+  color: var(--color-blue); background: var(--color-blue-subtle);
+  border-radius: 3px; padding: 1px 4px; margin-right: 8px;
+}
+.team-away::before {
+  content: 'A';
+  font-size: 9px; font-weight: 700; flex-shrink: 0;
+  color: var(--color-orange); background: var(--color-orange-subtle);
+  border-radius: 3px; padding: 1px 4px; margin-right: 8px;
+}
+
+/* ─── Keyframe animations ────────────────────────────────────────────────── */
+@keyframes qs-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes qs-progress {
+  0%   { width: 0%;  margin-left: 0; }
+  50%  { width: 60%; margin-left: 20%; }
+  100% { width: 0%;  margin-left: 100%; }
+}
+@keyframes qs-fade-in  { from { opacity: 0; }                              to { opacity: 1; } }
+@keyframes qs-slide-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+.anim-spin     { animation: qs-spin     0.8s  linear      infinite; }
+.anim-progress { animation: qs-progress 1.4s  ease-in-out infinite; }
+.anim-fade-in  { animation: qs-fade-in  0.15s ease; }
+.anim-slide-up { animation: qs-slide-up 0.15s ease; }
