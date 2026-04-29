@@ -1,7 +1,8 @@
+import { LoadState } from '@/types/match';
 import { Badge } from './Badge';
 
 interface Props {
-  loadState: 'idle' | 'loading' | 'loaded';
+  loadState: LoadState;
   endpointsVisible: boolean;
   matchCount: number;
 }

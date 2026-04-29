@@ -1,9 +1,10 @@
 'use client';
 
+import { LoadState } from '@/types/match';
 import { StageFilter } from './StageFilter';
 
 interface Props {
-  loadState: 'idle' | 'loading' | 'loaded';
+  loadState: LoadState;
   endpointsVisible: boolean;
   exported: boolean;
   genderFilter: string;

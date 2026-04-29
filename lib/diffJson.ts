@@ -1,6 +1,17 @@
-import { isEqual } from 'lodash';
+import { isEqual, get } from 'lodash';
 
-export type DiffStatus = 'match' | 'mismatch' | 'missing' | 'extra';
+export const COMPARABLE_FIELDS = [
+  'competition.name',
+  'competition.season',
+  'competition.round',
+  'venue.name',
+  'venue.city',
+  'kickoff',
+  'teams.home',
+  'teams.away',
+] as const;
+
+export type DiffStatus = 'match' | 'mismatch' | 'missing';
 
 export interface DiffNode {
   key: string;
@@ -10,57 +21,51 @@ export interface DiffNode {
   children?: DiffNode[];
 }
 
-function isObject(v: unknown): v is Record<string, unknown> {
-  return v !== null && typeof v === 'object' && !Array.isArray(v);
-}
-
-function diffValues(key: string, expected: unknown, actual: unknown): DiffNode {
-  if (isObject(expected) && isObject(actual)) {
-    const children = diffObjects(expected, actual);
-    const allMatch = children.every((c) => c.status === 'match');
-    return { key, status: allMatch ? 'match' : 'mismatch', children };
-  }
-
-  if (Array.isArray(expected) && Array.isArray(actual)) {
-    if (isEqual(expected, actual)) {
-      return { key, status: 'match', expectedValue: expected, actualValue: actual };
-    }
-    return { key, status: 'mismatch', expectedValue: expected, actualValue: actual };
-  }
-
-  if (isEqual(expected, actual)) {
-    return { key, status: 'match', expectedValue: expected, actualValue: actual };
-  }
-
-  return { key, status: 'mismatch', expectedValue: expected, actualValue: actual };
-}
-
-function diffObjects(
-  expected: Record<string, unknown>,
-  actual: Record<string, unknown>
-): DiffNode[] {
-  const nodes: DiffNode[] = [];
-
-  for (const key of Object.keys(expected)) {
-    if (!(key in actual)) {
-      nodes.push({ key, status: 'missing', expectedValue: expected[key] });
-    } else {
-      nodes.push(diffValues(key, expected[key], actual[key]));
-    }
-  }
-
-  for (const key of Object.keys(actual)) {
-    if (!(key in expected)) {
-      nodes.push({ key, status: 'extra', actualValue: actual[key] });
-    }
-  }
-
-  return nodes;
-}
-
 export function diffJson(
   expected: Record<string, unknown>,
-  actual: Record<string, unknown>
+  actual: Record<string, unknown>,
+  paths: readonly string[] = COMPARABLE_FIELDS
 ): DiffNode[] {
-  return diffObjects(expected, actual);
+  const groups = new Map<string, string[]>();
+
+  for (const path of paths) {
+    const dot = path.indexOf('.');
+    const top = dot === -1 ? path : path.slice(0, dot);
+    const rest = dot === -1 ? '' : path.slice(dot + 1);
+    if (!groups.has(top)) groups.set(top, []);
+    if (rest) groups.get(top)!.push(rest);
+  }
+
+  return Array.from(groups.entries()).map(([topKey, subPaths]) => {
+    if (subPaths.length === 0) {
+      const expectedVal = get(expected, topKey);
+      const actualVal = get(actual, topKey);
+      const status =
+        !(topKey in actual) ? 'missing'
+        : isEqual(expectedVal, actualVal) ? 'match'
+        : 'mismatch';
+      return { key: topKey, status, expectedValue: expectedVal, actualValue: actualVal };
+    }
+
+    const expectedSub = (get(expected, topKey) ?? {}) as Record<string, unknown>;
+    const actualSub = (get(actual, topKey) ?? {}) as Record<string, unknown>;
+    const topMissing = !(topKey in actual);
+
+    const children: DiffNode[] = subPaths.map((subKey) => {
+      const expectedVal = get(expectedSub, subKey);
+      const actualVal = get(actualSub, subKey);
+      const status =
+        topMissing || !(subKey in actualSub) ? 'missing'
+        : isEqual(expectedVal, actualVal) ? 'match'
+        : 'mismatch';
+      return { key: subKey, status, expectedValue: expectedVal, actualValue: actualVal };
+    });
+
+    const parentStatus =
+      children.every((c) => c.status === 'match') ? 'match'
+      : children.some((c) => c.status === 'missing') ? 'missing'
+      : 'mismatch';
+
+    return { key: topKey, status: parentStatus, children };
+  });
 }

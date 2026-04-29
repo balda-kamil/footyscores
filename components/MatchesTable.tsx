@@ -1,11 +1,11 @@
 'use client';
 
-import { Match } from '@/types/match';
+import { Match, LoadState } from '@/types/match';
 import { MatchRow } from './MatchRow';
 
 interface Props {
   matches: Match[];
-  loadState: 'idle' | 'loading' | 'loaded';
+  loadState: LoadState;
   endpointsVisible: boolean;
   baseUrl?: string;
   selectedId?: string;
