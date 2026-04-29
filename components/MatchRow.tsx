@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Match } from '@/types/match';
 import { generateEndpoint, formatKickoff, stageLabel } from '@/lib/matchUtils';
 import { Badge } from './Badge';
@@ -20,7 +20,7 @@ export function MatchRow({ match, idx, baseUrl = '', endpointsVisible, onInspect
   const endpoint = generateEndpoint(match, baseUrl);
   const kf = formatKickoff(match.kickoff);
 
-  function handleCopy(e: MouseEvent) {
+  function handleCopy(e: React.MouseEvent) {
     e.stopPropagation();
     navigator.clipboard.writeText(endpoint).then(() => {
       setCopied(true);
