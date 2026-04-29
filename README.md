@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# footy-scores-validator
 
-## Getting Started
+A Next.js tool for validating football API endpoints against the Paris 2024 Olympic schedule.
 
-First, run the development server:
+---
+
+## Install & run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.local.example .env.local   # or create manually
+npm run dev                         # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**`.env.local`**
+```
+NEXT_PUBLIC_API_BASE_URL=https://your-api.example.com
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This is the base URL of the football API being tested. For local development set it to `http://localhost:3000` — the app includes a mock API at `/api/v1/matches/[...path]` that returns plausible fixture data with intentional mismatches for demo purposes.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Deploy
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run build
+npm start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Standard Next.js deployment — works on Vercel, Fly.io, or any Node host. Set `NEXT_PUBLIC_API_BASE_URL` as an environment variable in your deployment target.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## How data is retrieved and parsed
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Fetch** — the browser calls `/api/olympics?url=...`, a Next.js server route that proxies the official Olympic schedule CDN (`stacy.olympics.com`). The proxy adds the required `Referer` header (the CDN blocks requests without it). The response is cached server-side for 1 hour.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Filter** — `filterFootballMatches` keeps only items that have a non-empty `code`, a `startDate`, and exactly two participants with non-blank names. Everything else is dropped silently.
+
+3. **Normalize** — `normalizeMatch` decodes each item's RSC event code:
+   - `code[3]` → gender: `'W'` = women, anything else = men
+   - `code.substring(22, 26)` → phase: `GPA-`/`GPB-`/`GPC-`/`GPD-` = group stages A–D, `QFNL` = quarter-final, `SFNL` = semi-final, `FNL-` = final
+   - `code.substring(26, 32)` → sequence number (raw integer ÷ 100); used to derive matchday for group games and to distinguish gold vs bronze for finals
+
+4. **Sort** — `sortMatches` orders by kickoff time ascending, then home team name, then away team name as tie-breakers.
+
+---
+
+## How endpoint ordering is determined
+
+Each match produces one API endpoint with the following path structure:
+
+```
+/api/v1/matches/{competition}/{season}/{round}/{home}-vs-{away}
+```
+
+| Segment | Value |
+|---|---|
+| `competition` | `olympics-football-men` or `olympics-football-women` |
+| `season` | always `2024` |
+| `round` | group: `group-{a–d}-matchday-{1–3}` · knockouts: `quarter-final`, `semi-final`, `gold-medal`, `bronze-medal` |
+| `{home}-vs-{away}` | team names run through `slugify`: lowercased, diacritics stripped (NFD), non-alphanumeric runs replaced with `-`, leading/trailing hyphens trimmed |
+
+The display order in the table matches the sort order above (earliest kickoff first).
+
+---
+
+## Assumptions for missing or inconsistent schedule data
+
+| Situation | Behaviour |
+|---|---|
+| Item missing `code` or `startDate` | Dropped by `filterFootballMatches` — not shown in the UI |
+| Fewer than 2 named participants (TBD slots) | Dropped — no endpoint generated |
+| Participant name is whitespace-only | Treated as missing — item dropped |
+| Group letter outside `{A, B, C, D}` | Falls through to the default branch: rendered as a group match with `group: null` and `matchday` equal to the raw sequence number |
+| `FNL-` with sequence = 1 | Gold medal match; sequence ≥ 2 → bronze medal |
+| `location.description` contains commas | Everything after the **last** comma is used as the city name |
+| `NEXT_PUBLIC_API_BASE_URL` not set | Defaults to `''` — endpoints are rendered as relative paths and comparison requests hit the same origin |
