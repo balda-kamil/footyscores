@@ -1,5 +1,7 @@
 'use client';
 
+import { StageFilter } from './StageFilter';
+
 interface Props {
   loadState: 'idle' | 'loading' | 'loaded';
   generating: boolean;
@@ -99,30 +101,7 @@ export function Toolbar({
           </div>
 
           {/* Stage filter */}
-          <div className="flex border border-line-hi rounded-[5px] overflow-hidden">
-            {(
-              [
-                ['all', 'All Stages'],
-                ['group', 'Group'],
-                ['quarter-final', 'QF'],
-                ['semi-final', 'SF'],
-                ['bronze-medal', 'Bronze'],
-                ['gold-medal', 'Gold'],
-              ] as const
-            ).map(([v, l]) => (
-              <button
-                key={v}
-                onClick={() => onStageFilter(v)}
-                className={`${filterBtnBase} ${
-                  stageFilter === v
-                    ? 'bg-surface-3 text-content font-semibold'
-                    : 'bg-surface-2 text-dim hover:bg-surface-3 hover:text-content'
-                }`}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
+          <StageFilter value={stageFilter} onChange={onStageFilter} />
 
           {/* Search */}
           <div className="relative w-[220px] max-w-full">

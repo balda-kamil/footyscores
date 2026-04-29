@@ -67,7 +67,7 @@ export default function Home() {
         <>
             {/* Header */}
             <header
-                className="flex items-center gap-4 px-4 sm:px-7 py-6 border-b border-line bg-surface sticky top-0 z-50">
+                className="flex flex-wrap items-center gap-4 px-4 sm:px-7 py-6 border-b border-line bg-surface sticky top-0 z-50 sm:flex-nowrap">
                 <div className="flex items-center gap-2.5">
                     <div
                         className="w-8 h-8 rounded-lg bg-green-subtle border border-[rgba(0,232,122,0.25)] flex items-center justify-center text-base shrink-0">
