@@ -1,5 +1,6 @@
 export type Stage = 'group' | 'quarter-final' | 'semi-final' | 'bronze-medal' | 'gold-medal';
 export type Gender = 'men' | 'women';
+export type LoadState = 'idle' | 'loading' | 'loaded';
 
 export interface Match {
   id: string;

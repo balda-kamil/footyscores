@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { AppHeader } from '@/components/AppHeader';
 import { Toolbar } from '@/components/Toolbar';
 import { StatsBar } from '@/components/StatsBar';
@@ -8,97 +8,37 @@ import { MatchesTable } from '@/components/MatchesTable';
 import { InspectModal } from '@/components/InspectModal';
 import { EndpointPanel } from '@/components/EndpointPanel';
 import { ExportToast } from '@/components/ExportToast';
-import { fetchOlympicSchedule } from '@/lib/fetchOlympicSchedule';
-import { filterFootballMatches } from '@/lib/filterFootballMatches';
-import { normalizeMatch } from '@/lib/normalizeMatch';
-import { sortMatches } from '@/lib/sortMatches';
-import { generateEndpoint } from '@/lib/matchUtils';
+import { useMatchLoader } from '@/hooks/useMatchLoader';
+import { useMatchFilter } from '@/hooks/useMatchFilter';
+import { buildExportPayload, createJsonBlob, downloadBlob } from '@/lib/exportUtils';
 import { API_BASE_URL } from '@/lib/apiConfig';
 import { Match } from '@/types/match';
 
 export default function Home() {
-  const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded'>('idle');
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [matches, setMatches] = useState<Match[]>([]);
+  const { loadState, loadError, matches, load } = useMatchLoader();
+  const { filters, filtered, isFiltered, setGender, setStage, setSearch, clearFilters } =
+    useMatchFilter(matches);
+
   const [endpointsVisible, setEndpointsVisible] = useState(false);
   const [exported, setExported] = useState(false);
-  const [genderFilter, setGenderFilter] = useState('all');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [search, setSearch] = useState('');
   const [inspectMatch, setInspectMatch] = useState<Match | null>(null);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-  async function handleLoad() {
-    setLoadState('loading');
-    setLoadError(null);
-    try {
-      const raw = await fetchOlympicSchedule();
-      const filtered = filterFootballMatches(raw);
-      const normalized = filtered.map(normalizeMatch);
-      const sorted = sortMatches(normalized);
-      setMatches(sorted);
-      setLoadState('loaded');
-    } catch (err) {
-      setLoadError(err instanceof Error ? err.message : 'Failed to load matches');
-      setLoadState('idle');
-    }
-  }
-
-  function handleGenerate() {
-    setEndpointsVisible((v) => !v);
-  }
-
-  function handleExport() {
-    const source = filtered.length > 0 ? filtered : matches;
-    const payload = source.map((m) => ({
-      id: m.id,
-      gender: m.gender,
-      stage: m.stage,
-      group: m.group,
-      matchday: m.matchday,
-      home: m.home,
-      away: m.away,
-      kickoff: m.kickoff,
-      venue: m.venue,
-      city: m.city,
-      endpoint: generateEndpoint(m, API_BASE_URL),
-    }));
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'olympics-football-endpoints.json';
-    a.click();
-    URL.revokeObjectURL(url);
+  function triggerExportFeedback() {
     setExported(true);
     setTimeout(() => setExported(false), 2500);
   }
 
-  function clearFilters() {
-    setSearch('');
-    setGenderFilter('all');
-    setStageFilter('all');
+  function handleExport() {
+    const payload = buildExportPayload(filtered);
+    const blob = createJsonBlob(payload);
+    downloadBlob(blob, 'olympics-football-endpoints.json');
+    triggerExportFeedback();
   }
 
-  const filtered = useMemo(() => {
-    let ms = matches;
-    if (genderFilter !== 'all') ms = ms.filter((m) => m.gender === genderFilter);
-    if (stageFilter !== 'all') ms = ms.filter((m) => m.stage === stageFilter);
-    if (search) {
-      const q = search.toLowerCase();
-      ms = ms.filter(
-        (m) =>
-          m.home.toLowerCase().includes(q) ||
-          m.away.toLowerCase().includes(q) ||
-          m.venue.toLowerCase().includes(q) ||
-          m.city.toLowerCase().includes(q)
-      );
-    }
-    return ms;
-  }, [matches, genderFilter, stageFilter, search]);
-
-  const isFiltered = genderFilter !== 'all' || stageFilter !== 'all' || search !== '';
-  const exportCount = filtered.length > 0 ? filtered.length : matches.length;
+  function handleSelect(match: Match) {
+    setSelectedMatch((prev) => (prev?.id === match.id ? null : match));
+  }
 
   return (
     <>
@@ -114,14 +54,14 @@ export default function Home() {
             loadState={loadState}
             endpointsVisible={endpointsVisible}
             exported={exported}
-            genderFilter={genderFilter}
-            stageFilter={stageFilter}
-            search={search}
-            onLoad={handleLoad}
-            onGenerate={handleGenerate}
+            genderFilter={filters.gender}
+            stageFilter={filters.stage}
+            search={filters.search}
+            onLoad={load}
+            onGenerate={() => setEndpointsVisible((v) => !v)}
             onExport={handleExport}
-            onGenderFilter={setGenderFilter}
-            onStageFilter={setStageFilter}
+            onGenderFilter={setGender}
+            onStageFilter={setStage}
             onSearch={setSearch}
           />
 
@@ -144,8 +84,8 @@ export default function Home() {
               endpointsVisible={endpointsVisible}
               baseUrl={API_BASE_URL}
               selectedId={selectedMatch?.id}
-              onLoad={handleLoad}
-              onSelect={(m) => setSelectedMatch((prev) => (prev?.id === m.id ? null : m))}
+              onLoad={load}
+              onSelect={handleSelect}
               onInspect={setInspectMatch}
               onClearFilters={clearFilters}
               isFiltered={isFiltered}
@@ -153,10 +93,7 @@ export default function Home() {
           </div>
 
           {selectedMatch && (
-            <EndpointPanel
-              match={selectedMatch}
-              onClose={() => setSelectedMatch(null)}
-            />
+            <EndpointPanel match={selectedMatch} onClose={() => setSelectedMatch(null)} />
           )}
         </div>
       </div>
@@ -165,7 +102,7 @@ export default function Home() {
         <InspectModal match={inspectMatch} onClose={() => setInspectMatch(null)} />
       )}
 
-      {exported && <ExportToast count={exportCount} />}
+      {exported && <ExportToast count={filtered.length} />}
     </>
   );
 }

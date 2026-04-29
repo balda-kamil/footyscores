@@ -7,8 +7,6 @@ const STAGES = [
   { value: 'gold-medal',   labelShort: 'Gold',        labelFull: 'Gold Medal'    },
 ] as const;
 
-type StageValue = typeof STAGES[number]['value'];
-
 interface Props {
   value: string;
   onChange: (v: string) => void;

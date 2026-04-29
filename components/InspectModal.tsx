@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
 import { Match } from '@/types/match';
-import { generateEndpoint, stageLabel, formatKickoff } from '@/lib/matchUtils';
+import { generateEndpoint, slugify, stageLabel, formatKickoff } from '@/lib/matchUtils';
 import { API_BASE_URL } from '@/lib/apiConfig';
+import { useClipboard } from '@/hooks/useClipboard';
 import { Badge } from './Badge';
 
 interface Props {
@@ -17,16 +17,14 @@ const infoCellVal = 'text-[13.5px] font-semibold';
 const sectionLabel = 'text-[11px] font-bold uppercase tracking-[0.7px] text-dim mb-2';
 
 export function InspectModal({ match, onClose }: Props) {
-  const [copied, setCopied] = useState(false);
+  const { copied, copy } = useClipboard();
   const endpoint = generateEndpoint(match, API_BASE_URL);
   const kf = formatKickoff(match.kickoff);
 
-  function handleCopy() {
-    navigator.clipboard.writeText(endpoint).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }
+  const round =
+    match.stage === 'group'
+      ? `group-${match.group!.toLowerCase()}-matchday-${match.matchday}`
+      : match.stage;
 
   return (
     <div
@@ -34,7 +32,6 @@ export function InspectModal({ match, onClose }: Props) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="bg-surface border border-line-hi rounded-xl w-[680px] max-w-full max-h-[85vh] flex flex-col anim-slide-up shadow-[0_24px_64px_rgba(0,0,0,0.5)]">
-        {/* Modal header */}
         <div className="px-[22px] py-[18px] border-b border-line flex flex-wrap sm:flex-nowrap items-center gap-3">
           <div className="flex gap-2 items-center w-full sm:w-auto">
             <Badge variant={match.gender === 'men' ? 'blue' : 'purple'}>
@@ -55,9 +52,7 @@ export function InspectModal({ match, onClose }: Props) {
           </button>
         </div>
 
-        {/* Modal body */}
         <div className="p-[22px] overflow-y-auto flex flex-col gap-5">
-          {/* Info grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div className={infoCell}>
               <div className={infoCellLabel}>Kickoff</div>
@@ -79,7 +74,6 @@ export function InspectModal({ match, onClose }: Props) {
             </div>
           </div>
 
-          {/* Endpoint */}
           <div>
             <div className={sectionLabel}>Generated Endpoint</div>
             <div className="bg-surface-2 border border-line rounded-[5px] p-[12px_14px] font-mono text-[12px] break-all leading-relaxed relative">
@@ -87,31 +81,22 @@ export function InspectModal({ match, onClose }: Props) {
               <span className="text-green">/api/v1/matches/</span>
               <span className="text-blue">olympics-football-{match.gender}</span>
               <span className="text-dim">/2024/</span>
-              <span className="text-orange">
-                {match.stage === 'group'
-                  ? `group-${match.group!.toLowerCase()}-matchday-${match.matchday}`
-                  : match.stage}
-              </span>
+              <span className="text-orange">{round}</span>
               <span className="text-dim">/</span>
-              <span className="text-content">
-                {match.home.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
-                -vs-
-                {match.away.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}
-              </span>
+              <span className="text-content">{slugify(match.home)}-vs-{slugify(match.away)}</span>
               <button
                 className={`absolute top-2 right-2 px-[9px] py-[3px] text-[11px] font-semibold rounded cursor-pointer transition-all border ${
                   copied
                     ? 'bg-green-subtle text-green border-[rgba(0,232,122,0.3)]'
                     : 'bg-surface-3 text-dim border-line-hi hover:bg-green-subtle hover:text-green'
                 }`}
-                onClick={handleCopy}
+                onClick={() => copy(endpoint)}
               >
                 {copied ? '✓ Copied' : 'Copy'}
               </button>
             </div>
           </div>
 
-          {/* Match details */}
           <div>
             <div className={sectionLabel}>Match Details</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
