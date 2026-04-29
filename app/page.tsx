@@ -13,6 +13,7 @@ import { filterFootballMatches } from '@/lib/filterFootballMatches';
 import { normalizeMatch } from '@/lib/normalizeMatch';
 import { sortMatches } from '@/lib/sortMatches';
 import { generateEndpoint } from '@/lib/matchUtils';
+import { API_BASE_URL } from '@/lib/apiConfig';
 import { Match } from '@/types/match';
 
 export default function Home() {
@@ -60,7 +61,7 @@ export default function Home() {
       kickoff: m.kickoff,
       venue: m.venue,
       city: m.city,
-      endpoint: generateEndpoint(m, 'https://api.footyscores.com'),
+      endpoint: generateEndpoint(m, API_BASE_URL),
     }));
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -141,7 +142,7 @@ export default function Home() {
               matches={filtered}
               loadState={loadState}
               endpointsVisible={endpointsVisible}
-              baseUrl="https://api.footyscores.com"
+              baseUrl={API_BASE_URL}
               selectedId={selectedMatch?.id}
               onLoad={handleLoad}
               onSelect={(m) => setSelectedMatch((prev) => (prev?.id === m.id ? null : m))}
