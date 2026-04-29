@@ -6,6 +6,7 @@ import { Toolbar } from '@/components/Toolbar';
 import { StatsBar } from '@/components/StatsBar';
 import { MatchesTable } from '@/components/MatchesTable';
 import { InspectModal } from '@/components/InspectModal';
+import { EndpointPanel } from '@/components/EndpointPanel';
 import { ExportToast } from '@/components/ExportToast';
 import { fetchOlympicSchedule } from '@/lib/fetchOlympicSchedule';
 import { filterFootballMatches } from '@/lib/filterFootballMatches';
@@ -18,13 +19,13 @@ export default function Home() {
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'loaded'>('idle');
   const [loadError, setLoadError] = useState<string | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [generating, setGenerating] = useState(false);
   const [endpointsVisible, setEndpointsVisible] = useState(false);
   const [exported, setExported] = useState(false);
   const [genderFilter, setGenderFilter] = useState('all');
   const [stageFilter, setStageFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [inspectMatch, setInspectMatch] = useState<Match | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
   async function handleLoad() {
     setLoadState('loading');
@@ -42,11 +43,8 @@ export default function Home() {
     }
   }
 
-  async function handleGenerate() {
-    setGenerating(true);
-    await new Promise((r) => setTimeout(r, 300));
-    setGenerating(false);
-    setEndpointsVisible(true);
+  function handleGenerate() {
+    setEndpointsVisible((v) => !v);
   }
 
   function handleExport() {
@@ -113,7 +111,6 @@ export default function Home() {
         <div className="px-4 sm:px-7 pt-6">
           <Toolbar
             loadState={loadState}
-            generating={generating}
             endpointsVisible={endpointsVisible}
             exported={exported}
             genderFilter={genderFilter}
@@ -138,17 +135,28 @@ export default function Home() {
           )}
         </div>
 
-        <div className="px-4 sm:px-7 pt-4 pb-6 flex-1">
-          <MatchesTable
-            matches={filtered}
-            loadState={loadState}
-            endpointsVisible={endpointsVisible}
-            baseUrl="https://api.footyscores.com"
-            onLoad={handleLoad}
-            onInspect={setInspectMatch}
-            onClearFilters={clearFilters}
-            isFiltered={isFiltered}
-          />
+        <div className="px-4 sm:px-7 pt-4 pb-6 flex-1 flex gap-4 min-h-0">
+          <div className="flex-1 min-w-0">
+            <MatchesTable
+              matches={filtered}
+              loadState={loadState}
+              endpointsVisible={endpointsVisible}
+              baseUrl="https://api.footyscores.com"
+              selectedId={selectedMatch?.id}
+              onLoad={handleLoad}
+              onSelect={(m) => setSelectedMatch((prev) => (prev?.id === m.id ? null : m))}
+              onInspect={setInspectMatch}
+              onClearFilters={clearFilters}
+              isFiltered={isFiltered}
+            />
+          </div>
+
+          {selectedMatch && (
+            <EndpointPanel
+              match={selectedMatch}
+              onClose={() => setSelectedMatch(null)}
+            />
+          )}
         </div>
       </div>
 

@@ -8,7 +8,9 @@ interface Props {
   loadState: 'idle' | 'loading' | 'loaded';
   endpointsVisible: boolean;
   baseUrl?: string;
+  selectedId?: string;
   onLoad: () => void;
+  onSelect: (match: Match) => void;
   onInspect: (match: Match) => void;
   onClearFilters: () => void;
   isFiltered: boolean;
@@ -30,7 +32,9 @@ export function MatchesTable({
   loadState,
   endpointsVisible,
   baseUrl = '',
+  selectedId,
   onLoad,
+  onSelect,
   onInspect,
   onClearFilters,
   isFiltered,
@@ -105,6 +109,8 @@ export function MatchesTable({
               idx={i}
               baseUrl={baseUrl}
               endpointsVisible={endpointsVisible}
+              selected={m.id === selectedId}
+              onSelect={onSelect}
               onInspect={onInspect}
             />
           ))}

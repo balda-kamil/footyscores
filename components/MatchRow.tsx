@@ -10,12 +10,14 @@ interface Props {
   idx: number;
   baseUrl?: string;
   endpointsVisible: boolean;
+  selected?: boolean;
+  onSelect: (match: Match) => void;
   onInspect: (match: Match) => void;
 }
 
 const cell = 'flex items-center overflow-hidden px-2 py-2.5';
 
-export function MatchRow({ match, idx, baseUrl = '', endpointsVisible, onInspect }: Props) {
+export function MatchRow({ match, idx, baseUrl = '', endpointsVisible, selected, onSelect, onInspect }: Props) {
   const [copied, setCopied] = useState(false);
   const endpoint = generateEndpoint(match, baseUrl);
   const kf = formatKickoff(match.kickoff);
@@ -30,8 +32,11 @@ export function MatchRow({ match, idx, baseUrl = '', endpointsVisible, onInspect
 
   return (
     <div
-      className="table-grid border-b border-line last:border-b-0 hover:bg-surface-2 transition-colors cursor-default"
+      className={`table-grid border-b border-line last:border-b-0 transition-colors cursor-pointer ${
+        selected ? 'bg-blue-subtle' : 'hover:bg-surface-2'
+      }`}
       role="row"
+      onClick={() => onSelect(match)}
     >
       {/* # */}
       <div className={`${cell} text-muted text-[11.5px] tabular-nums`}>{idx + 1}</div>

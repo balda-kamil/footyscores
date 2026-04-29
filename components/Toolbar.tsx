@@ -4,7 +4,6 @@ import { StageFilter } from './StageFilter';
 
 interface Props {
   loadState: 'idle' | 'loading' | 'loaded';
-  generating: boolean;
   endpointsVisible: boolean;
   exported: boolean;
   genderFilter: string;
@@ -30,7 +29,6 @@ const filterBtnBase =
 
 export function Toolbar({
   loadState,
-  generating,
   endpointsVisible,
   exported,
   genderFilter,
@@ -64,16 +62,16 @@ export function Toolbar({
       <button
         className={`${btnGhost} ${endpointsVisible ? 'border-[rgba(0,232,122,0.3)] text-green' : ''}`}
         onClick={onGenerate}
-        disabled={!loaded || generating || endpointsVisible}
+        disabled={!loaded}
       >
-        {endpointsVisible ? '✓ Endpoints Ready' : generating ? 'Generating…' : '⚡ Generate Endpoints'}
+        {endpointsVisible ? '✓ Hide Endpoints' : '⚡ Generate Endpoints'}
       </button>
 
       {/* Export JSON */}
       <button
         className={`${btnGhost} ${exported ? 'border-[rgba(0,232,122,0.3)] text-green' : ''}`}
         onClick={onExport}
-        disabled={!endpointsVisible}
+        disabled={!loaded}
       >
         {exported ? '✓ Exported' : '⬇ Export JSON'}
       </button>

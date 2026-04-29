@@ -82,7 +82,7 @@ body {
 }
 
 @media (min-width: 1000px) {
-  .table-grid { grid-template-columns: 44px 110px 52px 150px 1fr 130px 220px 90px; }
+  .table-grid { grid-template-columns: 44px 110px 52px 150px 200px 200px 1fr 90px; }
 }
 
 /* ─── H / A pseudo-labels ────────────────────────────────────────────────
