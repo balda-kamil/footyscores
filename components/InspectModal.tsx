@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Match } from '@/types/match';
 import { generateEndpoint, stageLabel, formatKickoff } from '@/lib/matchUtils';
+import { API_BASE_URL } from '@/lib/apiConfig';
 import { Badge } from './Badge';
 
 interface Props {
@@ -17,7 +18,7 @@ const sectionLabel = 'text-[11px] font-bold uppercase tracking-[0.7px] text-dim 
 
 export function InspectModal({ match, onClose }: Props) {
   const [copied, setCopied] = useState(false);
-  const endpoint = generateEndpoint(match, 'https://api.footyscores.com');
+  const endpoint = generateEndpoint(match, API_BASE_URL);
   const kf = formatKickoff(match.kickoff);
 
   function handleCopy() {
@@ -82,7 +83,7 @@ export function InspectModal({ match, onClose }: Props) {
           <div>
             <div className={sectionLabel}>Generated Endpoint</div>
             <div className="bg-surface-2 border border-line rounded-[5px] p-[12px_14px] font-mono text-[12px] break-all leading-relaxed relative">
-              <span className="text-dim">https://api.footyscores.com</span>
+              <span className="text-dim">{API_BASE_URL}</span>
               <span className="text-green">/api/v1/matches/</span>
               <span className="text-blue">olympics-football-{match.gender}</span>
               <span className="text-dim">/2024/</span>
