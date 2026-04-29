@@ -23,7 +23,7 @@ const btnGhostSm =
   'inline-flex items-center gap-[7px] px-2.5 py-1 rounded-[5px] text-[12px] font-medium cursor-pointer transition-all active:scale-[0.97] bg-surface-2 text-content border border-line-hi hover:bg-surface-3';
 
 const headerCell =
-  'flex items-center px-2 py-[9px] text-[11px] font-semibold uppercase tracking-[0.6px] text-dim whitespace-nowrap';
+  'bg-surface-2 flex items-center px-1 sm:px-2 py-[9px] text-[11px] font-semibold uppercase tracking-[0.6px] text-dim whitespace-nowrap';
 
 export function MatchesTable({
   matches,
@@ -87,15 +87,15 @@ export function MatchesTable({
   return (
     <div className="border border-line rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
-        <div className="table-grid bg-surface-2 border-b border-line px-3" role="row">
+        <div className="table-grid bg-surface-2  border-b border-line sm:px-3" role="row">
           <div className={headerCell}>#</div>
           <div className={headerCell}>Date</div>
           <div className={headerCell}>Type</div>
           <div className={headerCell}>Stage</div>
           <div className={headerCell}>Match</div>
           <div className={headerCell}>Venue</div>
-          <div className={`${headerCell} col-endpoint`}>Generated Endpoint</div>
-          <div className={`${headerCell} col-actions`}>Actions</div>
+          <div className={headerCell}>Generated Endpoint</div>
+          <div className={headerCell}>Actions</div>
         </div>
         <div>
           {matches.map((m, i) => (

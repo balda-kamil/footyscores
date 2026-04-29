@@ -78,12 +78,11 @@ body {
    ──────────────────────────────────────────────────────────────────────── */
 .table-grid {
   display: grid;
-  grid-template-columns: 44px 110px 52px 150px 1fr 130px 220px 90px;
+  grid-template-columns: 44px 110px 52px 150px 200px 130px 220px 90px;
 }
 
-@media (max-width: 900px) {
-  .table-grid { grid-template-columns: 44px 100px 50px 130px 1fr 100px; }
-  .col-endpoint, .col-actions { display: none; }
+@media (min-width: 1000px) {
+  .table-grid { grid-template-columns: 44px 110px 52px 150px 1fr 130px 220px 90px; }
 }
 
 /* ─── H / A pseudo-labels ────────────────────────────────────────────────

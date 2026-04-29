@@ -125,12 +125,12 @@ export function Toolbar({
           </div>
 
           {/* Search */}
-          <div className="relative">
+          <div className="relative w-[220px] max-w-full">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none text-sm">
               ⌕
             </span>
             <input
-              className="bg-surface-2 border border-line-hi text-content font-sans text-[13px] py-[7px] pl-[34px] pr-3 rounded-[5px] w-[220px] outline-none transition-[border-color] focus:border-blue placeholder:text-muted"
+              className="bg-surface-2 border border-line-hi text-content font-sans text-[13px] py-[7px] pl-[34px] pr-3 rounded-[5px] w-full outline-none transition-[border-color] focus:border-blue placeholder:text-muted"
               placeholder="Search teams, venues…"
               value={search}
               onChange={(e) => onSearch(e.target.value)}
